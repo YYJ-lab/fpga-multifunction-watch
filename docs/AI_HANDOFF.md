@@ -8,9 +8,9 @@
 
 分支：`feature/base-modules`
 
-Draft PR：`#1 WIP: base timing, debounce, display and datetime modules`
+PR：`#1 base timing, debounce, display and datetime modules`
 
-### 已写入仓库
+### 已写入仓库并完成本地 Vivado Behavioral Simulation
 
 RTL：
 
@@ -27,42 +27,37 @@ Testbench：
 - `sim/datetime_core_tb.v`
 - `sim/basic_watch_tb.v`
 
-协作文档：
+### 验证结果
 
-- `docs/INTERFACES.md`
-- `docs/TESTING.md`
-- `docs/CODE_STYLE.md`
-- `docs/STATUS.md`
-- `CONTRIBUTING.md`
+5 个 Behavioral Simulation 均已由成员本地 Vivado 运行并确认：
 
-### 最新 Vivado 验证结果
+1. `tick_gen_tb`：通过；
+2. `key_filter_tb`：通过；
+3. `LED_disp_tb`：通过；
+4. `datetime_core_tb`：通过；
+5. `basic_watch_tb`：通过。
 
-成员已提供本地 Vivado Behavioral Simulation 截图。
+关键确认：
 
-已确认通过：
+```text
+2024-02-28 23:59:58
+-> 2024-02-28 23:59:59
+-> 2024-02-29 00:00:00
+```
 
-- `tick_gen_tb`
-  - `tick_1s`、`tick_10ms` 均为周期性单周期脉冲；
-  - `blink_1hz` 周期翻转正常。
-- `key_filter_tb`
-  - 抖动输入只产生一次有效按下脉冲和一次有效释放脉冲；
-  - `Key_state` 改变正确。
-- `datetime_core_tb`
-  - `2024-02-28 23:59:58 -> 2024-02-29 00:00:00` 正确；
-  - 2024-02-29 改为 2023 年后自动修正为 2023-02-28；
-  - 设置字段选择和加减事件符合 testbench 设计。
-- `basic_watch_tb`
-  - `2026-12-31 23:59:58 -> 2027-01-01 00:00:00` 正确；
-  - 跨年后秒继续递增。
+```text
+2026-12-31 23:59:58
+-> 2026-12-31 23:59:59
+-> 2027-01-01 00:00:00
+```
 
-`LED_disp_tb` 当前属于“核心功能已观察，最后一项待补看”：
+`LED_disp_tb` 中还确认：
 
-- 已观察 `SEL=01→02→04→08→10→20→40→80` 循环扫描；
-- 数字段码与 `dp_data` 小数点控制符合预期；
-- 当前截图约停在 1000 ns，而 testbench 在约 1100 ns 后才修改 `digit_en`；
-- 还需要继续运行到 `$finish`（约 1700 ns），确认被 `digit_en` 禁用的扫描位输出 `LUT=8'hFF`。
+```text
+digit_en: FF -> EB
+```
 
-因此当前**不要**把 PR #1 转为 Ready for Review，也不要合入 `main`。补完 `LED_disp_tb` 的 blanking 验证后再进行。
+扫描到禁用位时 `LUT=FF`，说明 blanking 功能正确。
 
 ### 当前默认设计
 
@@ -101,22 +96,22 @@ LED_disp <- disp_data/digit_en/dp_data -> LUT/SEL
 
 最后两点不是当前错误，后续 UI 阶段再决定是否调整。
 
-### 下一步
+## 下一步
 
-只需先补完一项：
+进入第三批功能开发：
 
-1. 将 `LED_disp_tb` 重新设为 Simulation Top；
-2. `Run Behavioral Simulation`；
-3. 点击 `Run All`，或至少运行到约 1700 ns；
-4. 观察 1100 ns 之后 `digit_en` 从 `FF` 改变；
-5. 当扫描到被禁用的位时，确认 `LUT=FF`。
+1. `alarm_core.v` + `alarm_core_tb.v`
+2. `countdown.v` + `countdown_tb.v`
+3. `stopwatch.v` + `stopwatch_tb.v`
 
-该项通过后：
+原则：先冻结接口，再写 RTL，再做独立仿真，不直接堆到 `watch_top.v`。
 
-- 更新 `STATUS.md`；
-- 更新本文件；
-- 将 PR #1 从 Draft 转为 Ready for Review；
-- 再决定是否合入 `main`。
+第三批完成后进入：
+
+- `display_ctrl.v`
+- `watch_top.v`
+- XDC
+- 系统级仿真与上板
 
 ## AI 开始工作前必须执行
 

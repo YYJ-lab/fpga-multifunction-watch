@@ -1,0 +1,34 @@
+# Vivado generated / temporary files
+.Xil/
+*.jou
+*.log
+*.str
+*.tmp
+*.backup.*
+
+# Vivado generated directories
+*.cache/
+*.runs/
+*.sim/
+*.gen/
+*.hw/
+*.ip_user_files/
+
+# Generated programming/debug files
+*.bit
+*.bin
+*.ltx
+
+# Optional generated reports / checkpoints
+*.dcp
+*.rpt
+
+# OS / editor
+.DS_Store
+Thumbs.db
+.vscode/
+.idea/
+*~
+*.swp
+
+# Keep source project metadata such as .xpr if deliberately added.

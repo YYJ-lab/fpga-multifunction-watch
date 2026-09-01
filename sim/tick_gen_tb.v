@@ -2,12 +2,13 @@
 
 //============================================================
 // Testbench: tick_gen_tb
-// Purpose:
-//   Verify that tick_gen produces single-cycle timing events.
+// Verify:
+//   1. tick_1s is a one-clock-cycle pulse
+//   2. tick_10ms is a one-clock-cycle pulse
+//   3. blink_1hz toggles periodically
 //
-// Important:
-//   Real hardware uses very large count values. For simulation, the parameters
-//   are deliberately reduced so that the waveform can be observed quickly.
+// Real count values are very large, so this testbench shortens
+// the parameters only for simulation.
 //============================================================
 
 module tick_gen_tb();
@@ -27,7 +28,7 @@ tick_gen uut(
     .blink_1hz(blink_1hz)
 );
 
-// 50 MHz clock in the real design: period = 20 ns.
+// 50 MHz clock: 20 ns period
 initial Clk = 1'b0;
 always #10 Clk = ~Clk;
 
@@ -37,12 +38,11 @@ begin
     #100;
     Reset_n = 1'b1;
 
-    // Run long enough to observe several pulses and blink transitions.
-    #1000;
+    #1200;
     $finish;
 end
 
-// Shorten counters only for simulation.
+// Simulation-only shortened values
 defparam uut.MCNT_1S    = 10;
 defparam uut.MCNT_10MS  = 4;
 defparam uut.MCNT_BLINK = 5;

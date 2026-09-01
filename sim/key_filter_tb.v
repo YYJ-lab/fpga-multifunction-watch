@@ -2,8 +2,9 @@
 
 //============================================================
 // Testbench: key_filter_tb
-// Purpose:
-//   Verify that mechanical bounce does not create multiple valid key presses.
+// Verify:
+//   A bouncing key press produces only one Key_P_Flag pulse.
+//   A bouncing key release produces only one Key_R_Flag pulse.
 //============================================================
 
 module key_filter_tb();
@@ -35,31 +36,31 @@ begin
     #100;
     Reset_n = 1'b1;
 
-    // Simulate several fast bounces when the key is pressed.
+    // Press bounce
     #80  Key = 1'b0;
     #40  Key = 1'b1;
     #40  Key = 1'b0;
     #40  Key = 1'b1;
     #40  Key = 1'b0;
 
-    // Keep the key stably pressed long enough.
+    // Stable pressed
     #300;
 
-    // Simulate several fast bounces when the key is released.
+    // Release bounce
     Key = 1'b1;
     #40  Key = 1'b0;
     #40  Key = 1'b1;
     #40  Key = 1'b0;
     #40  Key = 1'b1;
 
-    // Keep the key stably released long enough.
+    // Stable released
     #300;
 
     $finish;
 end
 
-// Real hardware uses MCNT = 1,000,000 (20 ms).
-// The testbench shortens it only to make simulation fast.
+// Real hardware: 1,000,000
+// Simulation: use a very small value
 defparam uut.MCNT = 5;
 
 endmodule

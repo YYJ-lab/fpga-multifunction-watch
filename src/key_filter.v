@@ -3,18 +3,21 @@
 // Function:
 //   Mechanical key debounce.
 //
-// This implementation follows the four-state debounce structure used in the
-// course PPT. The main idea is:
-//   stable release -> possible press -> stable press -> possible release.
+// This module follows the four-state debounce idea used in the
+// course PPT:
+//   s0: stable release
+//   s1: press debounce
+//   s2: stable press
+//   s3: release debounce
 //
-// Key electrical level on HX7A75C:
+// HX7A75C key level:
 //   released = 1
 //   pressed  = 0
 //
 // Outputs:
-//   Key_P_Flag : one-clock-cycle pulse after a valid press is confirmed
-//   Key_R_Flag : one-clock-cycle pulse after a valid release is confirmed
-//   Key_state  : debounced key level, 1=released, 0=pressed
+//   Key_P_Flag : one-clock-cycle pulse after a valid press
+//   Key_R_Flag : one-clock-cycle pulse after a valid release
+//   Key_state  : debounced key state, 1=released, 0=pressed
 //============================================================
 
 module key_filter(
@@ -34,23 +37,23 @@ output reg Key_P_Flag;
 output reg Key_R_Flag;
 output reg Key_state;
 
-// Four states, consistent with the course example.
 localparam [1:0]
-    s0 = 2'b00,    // stable release
-    s1 = 2'b01,    // press debounce
-    s2 = 2'b10,    // stable press
-    s3 = 2'b11;    // release debounce
+    s0 = 2'b00,
+    s1 = 2'b01,
+    s2 = 2'b10,
+    s3 = 2'b11;
 
-// 20 ms debounce time at 50 MHz:
-// 50,000,000 * 0.02 = 1,000,000 cycles.
+// 50 MHz × 20 ms = 1,000,000 cycles
 parameter MCNT = 1000000;
 
 reg [1:0] r_Key;
 reg [19:0] cnt;
 reg [1:0] state;
 
-// Two-sample register used to detect key edges.
-// Reset to 11 because the key is normally released (high level).
+//------------------------------------------------------------
+// Synchronize/sample key level with two registers.
+// Reset to 11 because the key is normally released.
+//------------------------------------------------------------
 always @(posedge Clk or negedge Reset_n)
 begin
     if(!Reset_n)
@@ -67,7 +70,9 @@ wire nedge_key;
 assign pedge_key = (r_Key == 2'b01);
 assign nedge_key = (r_Key == 2'b10);
 
-// Main debounce state machine.
+//------------------------------------------------------------
+// Debounce state machine
+//------------------------------------------------------------
 always @(posedge Clk or negedge Reset_n)
 begin
     if(!Reset_n)
@@ -81,8 +86,8 @@ begin
     else
     begin
         case(state)
-            // Stable released state.
-            // A falling edge means the key may have been pressed.
+
+            // Stable released state
             s0:
             begin
                 Key_P_Flag <= 0;
@@ -97,14 +102,15 @@ begin
                     state <= s0;
             end
 
-            // Press debounce.
-            // If the key bounces back high before MCNT, cancel the press.
+            // Press debounce
             s1:
             begin
                 Key_P_Flag <= 0;
                 Key_R_Flag <= 0;
 
-                if(pedge_key && (cnt < MCNT - 1))
+                // If the signal returns high before debounce finishes,
+                // treat it as bounce and cancel this press.
+                if(pedge_key)
                 begin
                     state <= s0;
                     cnt <= 0;
@@ -123,8 +129,7 @@ begin
                 end
             end
 
-            // Stable pressed state.
-            // A rising edge means the key may have been released.
+            // Stable pressed state
             s2:
             begin
                 Key_P_Flag <= 0;
@@ -139,14 +144,13 @@ begin
                     state <= s2;
             end
 
-            // Release debounce.
-            // If the key bounces low again before MCNT, return to stable press.
+            // Release debounce
             s3:
             begin
                 Key_P_Flag <= 0;
                 Key_R_Flag <= 0;
 
-                if(nedge_key && (cnt < MCNT - 1))
+                if(nedge_key)
                 begin
                     state <= s2;
                     cnt <= 0;
@@ -173,6 +177,7 @@ begin
                 Key_R_Flag <= 0;
                 Key_state <= 1;
             end
+
         endcase
     end
 end

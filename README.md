@@ -9,7 +9,8 @@
 - 代码可综合、可仿真、可上板验证；
 - 模块职责清晰，便于两人协作；
 - 关键逻辑能够在验收时自行解释；
-- GitHub 作为代码、设计决策和 AI 交接的统一来源。
+- GitHub 作为代码、设计决策和 AI 交接的统一来源；
+- Verilog 写法优先参考课程 PPT，不无必要引入复杂语法。
 
 ## 计划功能
 
@@ -32,32 +33,98 @@
 - 设置字段闪烁；
 - 时间分隔符闪烁。
 
+## 当前开发状态
+
+当前正在 `feature/base-modules` 完成前两批基础 RTL：
+
+```text
+tick_gen
+key_filter
+LED_disp
+datetime_core
+```
+
+以及 5 个 Testbench：
+
+```text
+tick_gen_tb
+key_filter_tb
+LED_disp_tb
+datetime_core_tb
+basic_watch_tb
+```
+
+代码已经写入开发分支，但仍需成员在本地 Vivado 完成 Behavioral Simulation。未验证代码暂不合入 `main`。
+
+详细状态见：`docs/STATUS.md`。
+
 ## 仓库结构
 
 ```text
 fpga-multifunction-watch/
-├── src/                  # 可综合 Verilog 设计源码
-├── sim/                  # Testbench
-├── constraints/          # XDC 引脚与时钟约束
-├── vivado/               # Vivado 工程相关说明/必要配置
+├── src/                    # 可综合 Verilog 设计源码
+├── sim/                    # Testbench
+├── constraints/            # XDC 引脚与时钟约束
+├── vivado/                 # Vivado 工程说明/必要配置
 ├── docs/
-│   ├── REQUIREMENTS.md   # 课程要求与扩展范围
-│   ├── ARCHITECTURE.md   # 模块结构与接口原则
-│   ├── DECISIONS.md      # 已确认设计决策
-│   ├── TASKS.md          # 两人任务与进度
-│   └── AI_HANDOFF.md     # AI/成员交接状态
+│   ├── REQUIREMENTS.md     # 课程要求与扩展范围
+│   ├── ARCHITECTURE.md     # 模块结构
+│   ├── INTERFACES.md       # 已冻结/当前接口
+│   ├── DECISIONS.md        # 已确认设计决策
+│   ├── CODE_STYLE.md       # 课程对齐的代码规范
+│   ├── TESTING.md          # 本地 Vivado 测试步骤
+│   ├── STATUS.md           # 模块验证状态
+│   ├── TASKS.md            # 两人任务与进度
+│   └── AI_HANDOFF.md       # AI/成员交接状态
 ├── .github/
 │   └── pull_request_template.md
+├── CONTRIBUTING.md
 ├── .gitignore
 └── README.md
 ```
+
+## 本地快速开始
+
+仓库里的源码不是一个 `.xpr` Vivado 工程，不能直接用 `Open Project` 打开 `README.md`。
+
+第一次在本地使用：
+
+```text
+Vivado
+-> Create Project
+-> RTL Project
+-> Part: xc7a75tfgg484-2
+```
+
+然后：
+
+**Design Sources** 加入：
+
+```text
+src/tick_gen.v
+src/key_filter.v
+src/LED_disp.v
+src/datetime_core.v
+```
+
+**Simulation Sources** 加入：
+
+```text
+sim/tick_gen_tb.v
+sim/key_filter_tb.v
+sim/LED_disp_tb.v
+sim/datetime_core_tb.v
+sim/basic_watch_tb.v
+```
+
+完整测试顺序见 `docs/TESTING.md`。
 
 ## 协作规则
 
 1. `main` 只保留已经验证过的版本；
 2. 每项功能使用独立 `feature/*` 分支开发；
-3. 修改接口或全局设计前先更新 `docs/DECISIONS.md`；
-4. 每次完成一个可验证阶段后更新 `docs/AI_HANDOFF.md`；
+3. 修改接口或全局设计前先同步 `docs/INTERFACES.md` / `docs/DECISIONS.md`；
+4. 每次完成一个可验证阶段后更新 `docs/STATUS.md` 与 `docs/AI_HANDOFF.md`；
 5. 合并前至少完成对应仿真，重要阶段还需上板验证；
 6. 不提交 Vivado 自动生成的缓存、运行结果和临时文件。
 
@@ -65,6 +132,14 @@ fpga-multifunction-watch/
 
 每个 AI 在开始修改前，应先阅读：
 
-`README.md → docs/REQUIREMENTS.md → docs/DECISIONS.md → docs/ARCHITECTURE.md → docs/AI_HANDOFF.md`
+```text
+README.md
+-> docs/REQUIREMENTS.md
+-> docs/DECISIONS.md
+-> docs/ARCHITECTURE.md
+-> docs/INTERFACES.md
+-> docs/STATUS.md
+-> docs/AI_HANDOFF.md
+```
 
 然后只修改本次任务涉及的文件。若发现现有设计需要改变，应先说明原因并更新决策记录，避免两个 AI 各自重构一套方案。

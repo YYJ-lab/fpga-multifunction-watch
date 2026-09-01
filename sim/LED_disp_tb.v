@@ -2,8 +2,11 @@
 
 //============================================================
 // Testbench: LED_disp_tb
-// Purpose:
-//   Verify digit scanning, number decoding, digit blanking and decimal points.
+// Verify:
+//   - SEL scans through 8 digits
+//   - number decoding is correct
+//   - digit_en can blank digits
+//   - dp_data can turn decimal points on
 //============================================================
 
 module LED_disp_tb();
@@ -34,29 +37,28 @@ initial
 begin
     Reset_n = 1'b0;
 
-    // From high nibble to low nibble: 1 2 3 4 5 6 7 8
+    // Nibbles from high to low are: 1 2 3 4 5 6 7 8
     disp_data = 32'h12345678;
 
-    // Enable all eight digits.
+    // Enable all digits
     digit_en = 8'b11111111;
 
-    // Turn on decimal points for scan positions 1 and 3.
+    // Turn on decimal points at two scan positions
     dp_data = 8'b00001010;
 
     #100;
     Reset_n = 1'b1;
 
-    // Observe several complete scan frames.
     #1000;
 
-    // Test digit blanking: disable scan positions 2 and 4.
+    // Blank two digits
     digit_en = 8'b11101011;
     #600;
 
     $finish;
 end
 
-// Shorten scan period only for simulation.
+// Shorten scan time only for simulation
 defparam uut.MCNT_SCAN = 4;
 
 endmodule

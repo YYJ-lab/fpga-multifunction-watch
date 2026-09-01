@@ -8,7 +8,7 @@
 
 分支：`feature/base-modules`
 
-Draft PR：`#1 WIP: base timing and datetime modules`
+Draft PR：`#1 WIP: base timing, debounce, display and datetime modules`
 
 ### 已写入仓库
 
@@ -35,13 +35,34 @@ Testbench：
 - `docs/STATUS.md`
 - `CONTRIBUTING.md`
 
-### 验证状态
+### 最新 Vivado 验证结果
 
-上述 RTL/Testbench 目前属于“代码已写，等待本地 Vivado 验证”。
+成员已提供本地 Vivado Behavioral Simulation 截图。
 
-**不能把它们描述为已通过 Vivado。**
+已确认通过：
 
-成员下一步应按 `docs/TESTING.md` 依次完成 5 个 Behavioral Simulation，并把结果同步到 `STATUS.md`。
+- `tick_gen_tb`
+  - `tick_1s`、`tick_10ms` 均为周期性单周期脉冲；
+  - `blink_1hz` 周期翻转正常。
+- `key_filter_tb`
+  - 抖动输入只产生一次有效按下脉冲和一次有效释放脉冲；
+  - `Key_state` 改变正确。
+- `datetime_core_tb`
+  - `2024-02-28 23:59:58 -> 2024-02-29 00:00:00` 正确；
+  - 2024-02-29 改为 2023 年后自动修正为 2023-02-28；
+  - 设置字段选择和加减事件符合 testbench 设计。
+- `basic_watch_tb`
+  - `2026-12-31 23:59:58 -> 2027-01-01 00:00:00` 正确；
+  - 跨年后秒继续递增。
+
+`LED_disp_tb` 当前属于“核心功能已观察，最后一项待补看”：
+
+- 已观察 `SEL=01→02→04→08→10→20→40→80` 循环扫描；
+- 数字段码与 `dp_data` 小数点控制符合预期；
+- 当前截图约停在 1000 ns，而 testbench 在约 1100 ns 后才修改 `digit_en`；
+- 还需要继续运行到 `$finish`（约 1700 ns），确认被 `digit_en` 禁用的扫描位输出 `LUT=8'hFF`。
+
+因此当前**不要**把 PR #1 转为 Ready for Review，也不要合入 `main`。补完 `LED_disp_tb` 的 blanking 验证后再进行。
 
 ### 当前默认设计
 
@@ -82,29 +103,15 @@ LED_disp <- disp_data/digit_en/dp_data -> LUT/SEL
 
 ### 下一步
 
-本地 Vivado：
+只需先补完一项：
 
-1. `tick_gen_tb`
-2. `key_filter_tb`
-3. `LED_disp_tb`
-4. `datetime_core_tb`
-5. `basic_watch_tb`
+1. 将 `LED_disp_tb` 重新设为 Simulation Top；
+2. `Run Behavioral Simulation`；
+3. 点击 `Run All`，或至少运行到约 1700 ns；
+4. 观察 1100 ns 之后 `digit_en` 从 `FF` 改变；
+5. 当扫描到被禁用的位时，确认 `LUT=FF`。
 
-重点验证：
-
-```text
-2024-02-28 23:59:58
--> 2024-02-29 00:00:00
-```
-
-以及：
-
-```text
-2026-12-31 23:59:58
--> 2027-01-01 00:00:00
-```
-
-五个测试全部通过后：
+该项通过后：
 
 - 更新 `STATUS.md`；
 - 更新本文件；

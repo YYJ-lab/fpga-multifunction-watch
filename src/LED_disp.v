@@ -3,16 +3,20 @@
 // Function:
 //   Drive the 8-digit seven-segment display by dynamic scanning.
 //
-// Basis:
-//   The scanning counter and segment-code idea follow the course PPT example.
-//   Two small project extensions are added:
-//     1. digit_en : allows individual digits to be blanked;
-//     2. dp_data  : independently controls each decimal point.
+// Course relation:
+//   The scan counter and number-to-segment table follow the idea
+//   from the course PPT.
 //
-// HX7A75C board notes:
-//   - seven-segment display is common-anode;
-//   - segment output is LOW active: 0 = segment ON;
-//   - digit select SEL is HIGH active on this board.
+// Project extensions:
+//   digit_en : 1 = show this digit, 0 = blank this digit
+//   dp_data  : 1 = turn on decimal point for this digit
+//
+// HX7A75C board:
+//   - common-anode seven-segment display
+//   - segment output LOW active: 0 = ON
+//   - digit select SEL HIGH active
+//
+// LUT[7:0] = a b c d e f g dp
 //============================================================
 
 module LED_disp(
@@ -34,17 +38,17 @@ input Reset_n;
 output reg [7:0] LUT;
 output reg [7:0] SEL;
 
-// At 50 MHz, 50,000 clock cycles = 1 ms.
-// Each digit is selected for about 1 ms, so a full 8-digit frame is about 8 ms.
+// At 50 MHz, 50,000 cycles = 1 ms.
+// Each digit is selected for about 1 ms.
 parameter MCNT_SCAN = 50000;
 
 reg [15:0] count_clk;
 reg [2:0] cnt;
 reg [3:0] disp_tmp;
 
-//--------------------------
+//------------------------------------------------------------
 // Scan timing counter
-//--------------------------
+//------------------------------------------------------------
 always @(posedge Clk or negedge Reset_n)
 begin
     if(!Reset_n)
@@ -55,9 +59,9 @@ begin
         count_clk <= count_clk + 1'b1;
 end
 
-//--------------------------
-// Select next digit every scan period
-//--------------------------
+//------------------------------------------------------------
+// Digit index: 0 -> 1 -> ... -> 7 -> 0
+//------------------------------------------------------------
 always @(posedge Clk or negedge Reset_n)
 begin
     if(!Reset_n)
@@ -66,10 +70,10 @@ begin
         cnt <= cnt + 1'b1;
 end
 
-//--------------------------
+//------------------------------------------------------------
 // Digit select
-// HX7A75C SEL is HIGH active.
-//--------------------------
+// HX7A75C uses HIGH-active SEL.
+//------------------------------------------------------------
 always @(*)
 begin
     case(cnt)
@@ -85,11 +89,12 @@ begin
     endcase
 end
 
-//--------------------------
-// Choose the 4-bit value corresponding to the selected digit.
-// Compared with the original course example, this is written as combinational
-// logic so that the selected digit and selected data always stay aligned.
-//--------------------------
+//------------------------------------------------------------
+// Select the 4-bit number for the current digit.
+//
+// The course PPT uses the same 32-bit / 8-nibble organization.
+// Here it is combinational so the digit data stays aligned with SEL.
+//------------------------------------------------------------
 always @(*)
 begin
     case(cnt)
@@ -105,19 +110,17 @@ begin
     endcase
 end
 
-//--------------------------
-// Seven-segment decoding
-// LUT[7:0] = a b c d e f g dp
-// LOW level turns a segment on.
+//------------------------------------------------------------
+// Number-to-segment decoding
 //
-// Codes 0~9 reuse the segment table from the course PPT.
-// 4'hF is reserved by this project as a blank code.
-//--------------------------
+// 0~9 segment codes reuse the course PPT table.
+// 4'hF is reserved as blank in this project.
+//------------------------------------------------------------
 always @(*)
 begin
-    // If the current digit is disabled, turn all segments off.
     if(!digit_en[cnt])
     begin
+        // All segments off
         LUT = 8'b11111111;
     end
     else
@@ -136,7 +139,7 @@ begin
             default: LUT = 8'b11111111;
         endcase
 
-        // Decimal point is also LOW active.
+        // Decimal point is LOW active.
         if(dp_data[cnt])
             LUT[0] = 1'b0;
         else
